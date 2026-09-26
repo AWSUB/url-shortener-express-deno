@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "cors": "npm:cors@^2.8.6",
+    "dotenv": "npm:dotenv@^18.0.3",
+    "express": "npm:express@^5.2.1",
+    "helmet": "npm:helmet@^8.3.0",
+    "jsonwebtoken": "npm:jsonwebtoken@^9.0.3",
+    "typescript": "npm:typescript@^7.0.2",
+    "zod": "npm:zod@^4.6.5"
+  }
+}
