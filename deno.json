@@ -1,16 +1,30 @@
 {
-  "compilerOptions": {
-    "types": ["npm:@types/express@^5"]
-  },
   "tasks": {
     "dev": "deno run --env-file --allow-env --allow-net src/server.ts",
-    "test": "deno test"
+    "test": "deno test",
+    
+    "db": "dbmate --env-file .env.dbmate",
+    "db:new": "deno task db new",
+    "db:up": "deno task db up",
+    "db:create": "deno task db create",
+    "db:drop": "deno task db drop",
+    "db:migrate": "deno task db migrate",
+    "db:rollback": "deno task db rollback",
+    "db:down": "deno task db down",
+    "db:status": "deno task db status",
+    "db:dump": "deno task db dump",
+    "db:load": "deno task db load",
+    "db:wait": "deno task db wait",
+    "db:help": "deno task db --help"
   },
   "imports": {
+    "@types/express": "npm:@types/express@^5.0.6",
+    "@types/pg": "npm:@types/pg@^8.23.1",
     "cors": "npm:cors@^2.8.6",
     "express": "npm:express@^5.2.1",
     "helmet": "npm:helmet@^8.3.0",
     "jose": "npm:jose@^6.2.12",
+    "pg": "npm:pg@^8.23.0",
     "postgres": "npm:postgres@^3.4.9",
     "redis": "npm:redis@^6.2.1",
     "zod": "npm:zod@^4.6.5"
