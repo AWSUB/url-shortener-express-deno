@@ -4,7 +4,7 @@
   },
   "tasks": {
     "dev": "deno run --env-file --allow-env --allow-net src/server.ts",
-    "check": "deno check src/app.ts src/server.ts src/config/env.ts"
+    "test": "deno test"
   },
   "imports": {
     "cors": "npm:cors@^2.8.6",
