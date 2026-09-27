@@ -1,6 +1,10 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@upyo/core@0.6": "0.6.0",
+    "jsr:@upyo/mime@0.6": "0.6.0",
+    "jsr:@upyo/smtp@0.6": "0.6.0",
+    "npm:@noble/hashes@^1.8.0": "1.8.0",
     "npm:@types/express@^5.0.6": "5.0.6",
     "npm:@types/pg@^8.23.1": "8.23.1",
     "npm:cors@^2.8.6": "2.8.6",
@@ -12,7 +16,29 @@
     "npm:redis@^6.2.1": "6.2.1",
     "npm:zod@^4.6.5": "4.6.5"
   },
+  "jsr": {
+    "@upyo/core@0.6.0": {
+      "integrity": "3bfc1af04006e43901c1d7b399a774c95a37c985999788f4b5022608fe25f3ec"
+    },
+    "@upyo/mime@0.6.0": {
+      "integrity": "2805d77be0febdba5c8c1e8c6554a0ee210e11d479488de8ada52c51f2cebffa",
+      "dependencies": [
+        "jsr:@upyo/core",
+        "npm:@noble/hashes"
+      ]
+    },
+    "@upyo/smtp@0.6.0": {
+      "integrity": "da304deb47b5ab366cc316ca49f23be4b04cf1027caa2bc473646c3834635ce1",
+      "dependencies": [
+        "jsr:@upyo/core",
+        "jsr:@upyo/mime"
+      ]
+    }
+  },
   "npm": {
+    "@noble/hashes@1.8.0": {
+      "integrity": "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="
+    },
     "@redis/bloom@6.2.1_@redis+client@6.2.1": {
       "integrity": "sha512-huQgNLaCIZfQ9SeLn4q9124uOUd8HbZDYHwwUzNcRgHqCHiHKl2dDxMqJCeWh8cMqZAoWuHR8XnWbDMIf+o7ag==",
       "dependencies": [
@@ -598,6 +624,8 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@upyo/core@0.6",
+      "jsr:@upyo/smtp@0.6",
       "npm:@types/express@^5.0.6",
       "npm:@types/pg@^8.23.1",
       "npm:cors@^2.8.6",

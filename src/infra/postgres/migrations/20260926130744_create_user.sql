@@ -9,4 +9,4 @@ CREATE TABLE users (
 );
 
 -- migrate:down
-DELETE TABLE IF EXISTS users;
+DROP TABLE IF EXISTS users;

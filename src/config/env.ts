@@ -20,9 +20,17 @@ const schema = z.object({
   REDIS_USER: req,
   REDIS_PASSWORD: req,
 
+  MAIL_FROM: req,
+
+  SMTP_HOST: req,
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_AUTH: z.stringbool().default(true),
+  SMTP_USER: z.string().default(""),
+  SMTP_PASS: z.string().default(""),
+
   JWT_ACCESS_SECRET: req,
   JWT_EXPIRATION: req,
-});
+})
 
 export type Env = z.infer<typeof schema>;
 
