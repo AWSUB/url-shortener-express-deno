@@ -33,6 +33,35 @@ services:
       timeout: 3s
       retries: 5
 
+  app:
+    build: .
+    container_name: url-shortener-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_HOST: 0.0.0.0
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+    ports:
+      - "${APP_PORT:-3000}:${APP_PORT:-3000}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "deno",
+          "eval",
+          "const r = await fetch('http://127.0.0.1:${APP_PORT:-3000}/api/v1/health'); if (!r.ok) Deno.exit(1)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
 volumes:
   postgres_data:
   redis_data:

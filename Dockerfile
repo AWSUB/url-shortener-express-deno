@@ -1,0 +1,24 @@
+# https://docs.deno.com/runtime/reference/docker/
+
+# Build stage
+FROM denoland/deno:latest AS builder
+# Point Deno's cache at a known location so it can be copied to the next stage
+ENV DENO_DIR=/deno-dir
+WORKDIR /app
+
+# Copy manifests first so the dependency install layer caches across
+# source-only edits
+COPY deno.json deno.lock ./
+RUN deno ci --prod --skip-types
+
+# Then copy the rest of the source
+COPY . .
+
+# Production stage
+FROM denoland/deno:latest
+ENV DENO_DIR=/deno-dir
+WORKDIR /app
+COPY --from=builder /app .
+# Copy the populated Deno cache so the runtime stage has the dependencies
+COPY --from=builder /deno-dir /deno-dir
+CMD ["deno", "run", "--allow-net", "--allow-env", "src/server.ts"]

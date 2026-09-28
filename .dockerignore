@@ -1,0 +1,5 @@
+.git
+.env
+.env.dbmate
+Dockerfile*
+compose*.yaml
