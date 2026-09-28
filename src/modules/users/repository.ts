@@ -66,9 +66,7 @@ export const listUsers = async (): Promise<User[]> => {
 
 export const updateUser = async (
   id: string,
-  patch: Partial<
-    Pick<User, "email" | "password_hash" | "email_verified_at">
-  >,
+  patch: Partial<Pick<User, "email" | "password_hash" | "email_verified_at">>,
 ): Promise<User | null> => {
   const fields: string[] = [];
   const values: unknown[] = [id];

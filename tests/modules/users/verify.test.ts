@@ -10,7 +10,8 @@ Deno.test("verify reports both fields when the body is empty", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(issuePaths(body.data).sort(), ["email", "otp"]);
-  }));
+  }),
+);
 
 Deno.test("verify rejects an otp that is not six digits", () =>
   withApp(async (base) => {
@@ -18,7 +19,8 @@ Deno.test("verify rejects an otp that is not six digits", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(issuePaths(body.data), ["otp"]);
-  }));
+  }),
+);
 
 Deno.test("verify rejects a malformed email alongside a valid otp", () =>
   withApp(async (base) => {
@@ -26,4 +28,5 @@ Deno.test("verify rejects a malformed email alongside a valid otp", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(issuePaths(body.data), ["email"]);
-  }));
+  }),
+);

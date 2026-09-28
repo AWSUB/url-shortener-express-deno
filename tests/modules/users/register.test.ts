@@ -11,7 +11,8 @@ Deno.test("register rejects a body that is not an object", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(body.message, "validation failed");
-  }));
+  }),
+);
 
 Deno.test("malformed json is a logged 400, not a 500", () =>
   withApp(async (base) => {
@@ -20,11 +21,12 @@ Deno.test("malformed json is a logged 400, not a 500", () =>
         method: "POST",
         headers: { "content-type": "application/json" },
         body: '{"email": "a@b.co"',
-      })
+      }),
     );
     assertEquals(res.status, 400);
     assertEquals(logged.length, 1);
-  }));
+  }),
+);
 
 Deno.test("register reports both fields when the body is empty", () =>
   withApp(async (base) => {
@@ -32,7 +34,8 @@ Deno.test("register reports both fields when the body is empty", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(issuePaths(body.data).sort(), ["email", "password"]);
-  }));
+  }),
+);
 
 Deno.test("register rejects a malformed email", () =>
   withApp(async (base) => {
@@ -42,7 +45,8 @@ Deno.test("register rejects a malformed email", () =>
     assertEquals(body.data, [
       { path: "email", message: "Invalid email address" },
     ]);
-  }));
+  }),
+);
 
 Deno.test("register rejects a password shorter than 8 characters", () =>
   withApp(async (base) => {
@@ -50,4 +54,5 @@ Deno.test("register rejects a password shorter than 8 characters", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(issuePaths(body.data), ["password"]);
-  }));
+  }),
+);

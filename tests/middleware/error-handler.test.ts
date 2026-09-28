@@ -27,28 +27,34 @@ const call = (err: Error) => {
   return captured;
 };
 
-Deno.test("a zod error becomes a 400 with dotted paths and is not logged", async () => {
-  const parsed = z
-    .object({ user: z.object({ email: z.email() }) })
-    .safeParse({ user: {} });
-  if (parsed.success) throw new Error("fixture was supposed to fail");
+Deno.test(
+  "a zod error becomes a 400 with dotted paths and is not logged",
+  async () => {
+    const parsed = z
+      .object({ user: z.object({ email: z.email() }) })
+      .safeParse({ user: {} });
+    if (parsed.success) throw new Error("fixture was supposed to fail");
 
-  const [res, logged] = await withCapturedLogs(() => call(parsed.error));
-  const issues = res.body?.data as Array<{ path: string; message: string }>;
+    const [res, logged] = await withCapturedLogs(() => call(parsed.error));
+    const issues = res.body?.data as Array<{ path: string; message: string }>;
 
-  assertEquals(res.code, 400);
-  assertEquals(res.body?.message, "validation failed");
-  assertEquals(
-    issues.map((issue) => issue.path),
-    ["user.email"],
-  );
-  assertEquals(issues.every((issue) => issue.message.length > 0), true);
-  assertEquals(logged.length, 0);
-});
+    assertEquals(res.code, 400);
+    assertEquals(res.body?.message, "validation failed");
+    assertEquals(
+      issues.map((issue) => issue.path),
+      ["user.email"],
+    );
+    assertEquals(
+      issues.every((issue) => issue.message.length > 0),
+      true,
+    );
+    assertEquals(logged.length, 0);
+  },
+);
 
 Deno.test("an httpError keeps its status and message", async () => {
   const [res, logged] = await withCapturedLogs(() =>
-    call(httpError("email already registered", 409))
+    call(httpError("email already registered", 409)),
   );
 
   assertEquals(res.code, 409);

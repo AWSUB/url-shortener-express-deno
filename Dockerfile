@@ -1,7 +1,7 @@
 # https://docs.deno.com/runtime/reference/docker/
 
 # Build stage
-FROM denoland/deno:latest AS builder
+FROM denoland/deno:alpine AS builder
 # Point Deno's cache at a known location so it can be copied to the next stage
 ENV DENO_DIR=/deno-dir
 WORKDIR /app
@@ -15,7 +15,7 @@ RUN deno ci --prod --skip-types
 COPY . .
 
 # Production stage
-FROM denoland/deno:latest
+FROM denoland/deno:alpine
 ENV DENO_DIR=/deno-dir
 WORKDIR /app
 COPY --from=builder /app .
