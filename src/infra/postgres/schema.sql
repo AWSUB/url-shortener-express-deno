@@ -35,10 +35,11 @@ CREATE TABLE public.schema_migrations (
 CREATE TABLE public.users (
     id uuid NOT NULL,
     email character varying(255) NOT NULL,
-    password_hash character varying(72) NOT NULL,
+    password_hash character varying(255) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    email_verified_at timestamp with time zone
 );
 
 
@@ -86,4 +87,5 @@ ALTER TABLE ONLY public.users
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20260926130744');
+    ('20260926130744'),
+    ('20260927151509');

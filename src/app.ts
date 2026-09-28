@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { errorHandler } from "./middleware/error-handler.ts";
 import { notFound } from "./middleware/not-found.ts";
 import miscRouter from "./modules/misc/routes.ts";
+import usersRouter from "./modules/users/routes.ts";
 
 export const app = express();
 
@@ -14,8 +15,9 @@ app.use(express.json());
 const api = Router();
 
 api.use(miscRouter);
+api.use(usersRouter);
 
-app.use("/api", api)
+app.use("/api", api);
 
 app.use(notFound);
 app.use(errorHandler);

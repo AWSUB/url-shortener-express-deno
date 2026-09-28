@@ -28,6 +28,9 @@ const schema = z.object({
   SMTP_USER: z.string().default(""),
   SMTP_PASS: z.string().default(""),
 
+  OTP_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+  OTP_TTL_SECONDS: z.coerce.number().int().positive().default(600),
+
   JWT_ACCESS_SECRET: req,
   JWT_EXPIRATION: req,
 })
