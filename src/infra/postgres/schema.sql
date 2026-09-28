@@ -29,6 +29,22 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: url_entries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.url_entries (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    short_code character varying(255) NOT NULL,
+    original_url text NOT NULL,
+    click_count integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone
+);
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -49,6 +65,22 @@ CREATE TABLE public.users (
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: url_entries url_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.url_entries
+    ADD CONSTRAINT url_entries_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: url_entries url_entries_short_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.url_entries
+    ADD CONSTRAINT url_entries_short_code_key UNIQUE (short_code);
 
 
 --
@@ -76,6 +108,21 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: url_entries_user_id_short_code_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX url_entries_user_id_short_code_idx ON public.url_entries USING btree (user_id, short_code);
+
+
+--
+-- Name: url_entries url_entries_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.url_entries
+    ADD CONSTRAINT url_entries_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -88,4 +135,5 @@ ALTER TABLE ONLY public.users
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20260926130744'),
-    ('20260927151509');
+    ('20260927151509'),
+    ('20260928071330');
