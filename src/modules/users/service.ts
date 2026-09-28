@@ -1,32 +1,41 @@
 import { randomUUID } from "node:crypto";
+import type { Transport } from "@upyo/core";
 import { APP_CONFIG } from "../../config/env.ts";
 import { httpError } from "../../utils/http-error.ts";
 import { signAccessToken } from "../../utils/jwt.ts";
-import { sendMail } from "../../utils/mailer.ts";
+import { sendMail, smtpTransport } from "../../utils/mailer.ts";
 import { consumeOtp, issueOtp } from "../../utils/otp.ts";
 import { hashPassword, verifyPassword } from "../../utils/password.ts";
 import * as repository from "./repository.ts";
 
-export const register = async (email: string, password: string) => {
-  const existing = await repository.getUserByEmail(email);
+export const register = async (
+  email: string,
+  password: string,
+  mailTransport: Pick<Transport, "send"> = smtpTransport,
+) => {
+  const address = email.toLowerCase();
+  const existing = await repository.getUserByEmail(address);
 
   if (existing?.email_verified_at) {
     throw httpError("email already registered", 409);
   }
 
   if (!existing) {
-    await repository.createUser(randomUUID(), email, await hashPassword(password));
+    await repository.createUser(randomUUID(), address, await hashPassword(password));
   }
 
-  const code = await issueOtp(email);
+  const code = await issueOtp(address);
 
-  const receipt = await sendMail({
-    to: email,
-    subject: "Verify your email",
-    content: {
-      text: `Your verification code is ${code}. It expires in ${APP_CONFIG.OTP_TTL_SECONDS / 60} minutes.`,
+  const receipt = await sendMail(
+    {
+      to: address,
+      subject: "Verify your email",
+      content: {
+        text: `Your verification code is ${code}. It expires in ${APP_CONFIG.OTP_TTL_SECONDS / 60} minutes.`,
+      },
     },
-  });
+    mailTransport,
+  );
 
   if (!receipt.successful) {
     throw httpError("failed to send verification email", 502);
@@ -34,18 +43,25 @@ export const register = async (email: string, password: string) => {
 };
 
 export const verify = async (email: string, otp: string) => {
-  await consumeOtp(email, otp);
+  const address = email.toLowerCase();
+  const user = await repository.getUserByEmail(address);
 
-  const user = await repository.getUserByEmail(email);
-  if (!user?.email_verified_at) {
-    throw httpError("invalid or expired code", 400);
+  if (!user) {
+    throw httpError("user not found", 404);
   }
+
+  if (user.email_verified_at) {
+    throw httpError("email already verified", 400);
+  }
+
+  await consumeOtp(address, otp);
 
   await repository.updateUser(user.id, { email_verified_at: new Date() });
 };
 
 export const login = async (email: string, password: string) => {
-  const user = await repository.getUserByEmail(email);
+  const address = email.toLowerCase();
+  const user = await repository.getUserByEmail(address);
 
   if (!user || !(await verifyPassword(password, user.password_hash))) {
     throw httpError("invalid email or password", 401);

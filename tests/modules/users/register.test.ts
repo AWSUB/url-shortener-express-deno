@@ -56,3 +56,31 @@ Deno.test("register rejects a password shorter than 8 characters", () =>
     assertEquals(issuePaths(body.data), ["password"]);
   }),
 );
+
+Deno.test("service.register creates unverified user and sets OTP in Redis", async () => {
+  const email = `reg-success-${Date.now()}@example.com`;
+  const mockTransport = {
+    send: () => Promise.resolve({ successful: true as const, messageId: "msg-1" }),
+  };
+
+  const { register: registerService } = await import(
+    "../../../src/modules/users/service.ts"
+  );
+  const { pool } = await import("../../../src/infra/postgres/index.ts");
+  const { client } = await import("../../../src/infra/redis/index.ts");
+  const repository = await import("../../../src/modules/users/repository.ts");
+
+  await registerService(email, "password123", mockTransport);
+
+  const user = await repository.getUserByEmail(email);
+  assertEquals(user !== null, true);
+  assertEquals(user?.email_verified_at, null);
+
+  const rawOtp = await client.get(`email-otp:${email}`);
+  assertEquals(rawOtp !== null, true);
+
+  // Clean up
+  await pool.query("DELETE FROM users WHERE id = $1", [user!.id]);
+  await client.del(`email-otp:${email}`);
+});
+
