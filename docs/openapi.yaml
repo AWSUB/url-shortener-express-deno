@@ -1,0 +1,559 @@
+openapi: 3.0.0
+info:
+  title: URL Shortener API
+servers:
+  - url: /api
+    description: API base path (append to the application origin)
+tags:
+  - name: Health
+  - name: Users
+  - name: URLs
+
+paths:
+  /v1/health:
+    get:
+      tags: [Health]
+      summary: Check API health
+      operationId: getHealth
+      responses:
+        '200':
+          description: The API is responding.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: ok
+
+  /v1/users/register:
+    post:
+      tags: [Users]
+      summary: Register an account and send an email verification code
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: person@example.com
+              password: correct-horse-battery
+      responses:
+        '201':
+          description: A verification code was sent to the email address.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: verification code sent
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '409':
+          description: The email address is already registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: email already registered
+        '502':
+          description: The verification email could not be sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: failed to send verification email
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/users/verify:
+    post:
+      tags: [Users]
+      summary: Verify an email address
+      operationId: verifyUserEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+            example:
+              email: person@example.com
+              otp: '042681'
+      responses:
+        '200':
+          description: The email address was verified.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: email verified
+        '400':
+          description: The request is invalid, the code is invalid or expired, too many attempts were made, or the email is already verified.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+                  - $ref: '#/components/schemas/MessageResponse'
+              examples:
+                validation:
+                  value:
+                    message: validation failed
+                    data:
+                      - path: otp
+                        message: Invalid
+                invalidCode:
+                  value:
+                    message: invalid or expired code
+                alreadyVerified:
+                  value:
+                    message: email already verified
+        '404':
+          description: No active user was found for the email address.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: user not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/users/login:
+    post:
+      tags: [Users]
+      summary: Log in and obtain an access token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: person@example.com
+              password: correct-horse-battery
+      responses:
+        '200':
+          description: Login succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                message: logged in
+                data:
+                  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          description: The credentials are invalid or the email address has not been verified.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    message: invalid email or password
+                unverified:
+                  value:
+                    message: email not verified yet
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/urls:
+    post:
+      tags: [URLs]
+      summary: Create a short URL
+      operationId: createUrl
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUrlRequest'
+            example:
+              original_url: https://example.com/a-long-page
+              custom_code: my-link
+              expires_at: '2027-01-01T00:00:00Z'
+      responses:
+        '201':
+          description: The short URL was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlEntryResponse'
+              example:
+                message: short URL created
+                data:
+                  id: 6a4a6df3-9940-4f67-9d1a-d5057689c6a1
+                  user_id: c0883237-662b-411c-b185-04eca83bbcf8
+                  short_code: my-link
+                  original_url: https://example.com/a-long-page
+                  click_count: 0
+                  created_at: '2026-09-29T10:00:00.000Z'
+                  updated_at: '2026-09-29T10:00:00.000Z'
+                  expires_at: '2027-01-01T00:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: The requested custom code is already taken.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: short code already taken
+        '503':
+          description: A unique generated short code could not be allocated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: unable to generate a unique short code, please try again
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags: [URLs]
+      summary: List the authenticated user's short URLs
+      operationId: listUrls
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The user's URL entries, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlEntryListResponse'
+              example:
+                message: ok
+                data: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/urls/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID of the URL entry.
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [URLs]
+      summary: Get one of the authenticated user's short URLs
+      operationId: getUrl
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The URL entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlEntryResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No URL entry with this ID belongs to the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: URL not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [URLs]
+      summary: Delete one of the authenticated user's short URLs
+      operationId: deleteUrl
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The URL entry was deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: URL deleted
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No URL entry with this ID belongs to the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: URL not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/urls/code/{code}:
+    get:
+      tags: [URLs]
+      summary: Resolve a short code to its original URL
+      description: Returns the destination URL as JSON. Redirect handling is performed separately.
+      operationId: resolveShortUrl
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Short code assigned to a URL.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: The original URL for the short code. The click count is incremented when resolved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OriginalUrlResponse'
+              example:
+                message: ok
+                data:
+                  originalUrl: https://example.com/a-long-page
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '404':
+          description: No short URL exists for this code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: short URL not found
+        '410':
+          description: The short URL has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: short URL has expired
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token returned by POST /v1/users/login.
+  responses:
+    ValidationFailed:
+      description: Request validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+          example:
+            message: validation failed
+            data:
+              - path: email
+                message: Invalid email address
+    Unauthorized:
+      description: A valid bearer access token is required.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+          example:
+            message: missing or invalid authorization header
+    InternalServerError:
+      description: An unexpected server error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+          example:
+            message: internal server error
+  schemas:
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        data:
+          description: Optional response payload; its shape depends on the operation.
+    ValidationErrorResponse:
+      type: object
+      required: [message, data]
+      properties:
+        message:
+          type: string
+          example: validation failed
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+    ValidationIssue:
+      type: object
+      required: [path, message]
+      properties:
+        path:
+          type: string
+          description: Dot-separated path to the invalid value; may be empty for a body-level issue.
+          example: email
+        message:
+          type: string
+          example: Invalid email address
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    VerifyEmailRequest:
+      type: object
+      required: [email, otp]
+      properties:
+        email:
+          type: string
+          format: email
+        otp:
+          type: string
+          pattern: '^\d{6}$'
+          description: Six-digit email verification code, including any leading zeroes.
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    LoginResponse:
+      type: object
+      required: [message, data]
+      properties:
+        message:
+          type: string
+          example: logged in
+        data:
+          type: object
+          required: [accessToken]
+          properties:
+            accessToken:
+              type: string
+              description: Signed JWT access token.
+    OriginalUrlResponse:
+      type: object
+      required: [message, data]
+      properties:
+        message:
+          type: string
+          example: ok
+        data:
+          type: object
+          required: [originalUrl]
+          properties:
+            originalUrl:
+              type: string
+              format: uri
+    CreateUrlRequest:
+      type: object
+      required: [original_url]
+      properties:
+        original_url:
+          type: string
+          format: uri
+          description: Absolute URL to which the short code redirects.
+        custom_code:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: Optional unique short code. If omitted, the API generates one.
+        expires_at:
+          type: string
+          format: date-time
+          description: Optional expiration timestamp; must include a UTC offset.
+    UrlEntry:
+      type: object
+      required:
+        - id
+        - user_id
+        - short_code
+        - original_url
+        - click_count
+        - created_at
+        - updated_at
+        - expires_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        short_code:
+          type: string
+        original_url:
+          type: string
+          format: uri
+        click_count:
+          type: integer
+          format: int32
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+    UrlEntryResponse:
+      type: object
+      required: [message, data]
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/UrlEntry'
+    UrlEntryListResponse:
+      type: object
+      required: [message, data]
+      properties:
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UrlEntry'

@@ -4,7 +4,7 @@ import { create, get, list, redirect, remove } from "./controller.ts";
 
 const router = Router();
 
-router.get("/v1/:code", redirect);
+router.get("/v1/urls/code/:code", redirect);
 
 router.post("/v1/urls", auth, create);
 router.get("/v1/urls", auth, list);

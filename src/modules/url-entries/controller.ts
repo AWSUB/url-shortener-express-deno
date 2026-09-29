@@ -20,12 +20,18 @@ export const create = async (req: Request, res: Response<AppResponse<URLEntry>>)
   });
 };
 
-export const redirect = async (req: Request, res: Response) => {
+export const redirect = async (
+  req: Request,
+  res: Response<AppResponse<{ originalUrl: string }>>,
+) => {
   const { code } = shortCodeParamSchema.parse(req.params);
 
   const originalUrl = await service.redirect(code);
 
-  res.redirect(302, originalUrl);
+  res.json({
+    message: "ok",
+    data: { originalUrl },
+  });
 };
 
 export const list = async (req: Request, res: Response<AppResponse<URLEntry[]>>) => {
