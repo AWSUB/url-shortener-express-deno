@@ -9,12 +9,12 @@ export const createUrl = async (
   customCode?: string,
   expiresAt?: string,
 ): Promise<repository.URLEntry> => {
-  const expires_at = expiresAt ? new Date(expiresAt) : null;
+  const expiresAtDate = expiresAt ? new Date(expiresAt) : null;
 
   const maxAttempts = customCode ? 1 : 5;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const short_code = customCode ?? generateShortCode();
-    const existing = await repository.getUrlEntryByShortCode(short_code);
+    const shortCode = customCode ?? generateShortCode();
+    const existing = await repository.getUrlEntryByShortCode(shortCode);
     if (existing) {
       if (customCode) throw httpError("short code already taken", 409);
       continue;
@@ -23,9 +23,9 @@ export const createUrl = async (
     return repository.createUrlEntry(
       randomUUID(),
       userId,
-      short_code,
+      shortCode,
       originalUrl,
-      expires_at,
+      expiresAtDate,
     );
   }
 

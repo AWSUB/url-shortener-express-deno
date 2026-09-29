@@ -16,10 +16,10 @@ const COLS =
 
 export const createUrlEntry = async (
   id: string,
-  user_id: string,
-  short_code: string,
-  original_url: string,
-  expires_at: Date | null,
+  userId: string,
+  shortCode: string,
+  originalUrl: string,
+  expiresAt: Date | null,
 ): Promise<URLEntry> => {
   const { rows } = await pool.query<URLEntry>(
     `
@@ -27,52 +27,52 @@ export const createUrlEntry = async (
     VALUES ($1, $2, $3, $4, $5)
     RETURNING ${COLS}
     `,
-    [id, user_id, short_code, original_url, expires_at],
+    [id, userId, shortCode, originalUrl, expiresAt],
   );
   return rows[0];
 };
 
 export const getUrlEntryByShortCode = async (
-  short_code: string,
+  shortCode: string,
 ): Promise<URLEntry | null> => {
   const { rows } = await pool.query<URLEntry>(
     `
     SELECT ${COLS} FROM url_entries
     WHERE short_code = $1
     `,
-    [short_code],
+    [shortCode],
   );
   return rows[0] ?? null;
 };
 
 export const getUrlEntryById = async (
   id: string,
-  user_id: string,
+  userId: string,
 ): Promise<URLEntry | null> => {
   const { rows } = await pool.query<URLEntry>(
     `
     SELECT ${COLS} FROM url_entries
     WHERE id = $1 AND user_id = $2
     `,
-    [id, user_id],
+    [id, userId],
   );
   return rows[0] ?? null;
 };
 
-export const listUrlEntries = async (user_id: string): Promise<URLEntry[]> => {
+export const listUrlEntries = async (userId: string): Promise<URLEntry[]> => {
   const { rows } = await pool.query<URLEntry>(
     `
     SELECT ${COLS} FROM url_entries
     WHERE user_id = $1
     ORDER BY created_at DESC
     `,
-    [user_id],
+    [userId],
   );
   return rows;
 };
 
 export const incrementClickCount = async (
-  short_code: string,
+  shortCode: string,
 ): Promise<void> => {
   await pool.query(
     `
@@ -80,20 +80,20 @@ export const incrementClickCount = async (
     SET click_count = click_count + 1, updated_at = now()
     WHERE short_code = $1
     `,
-    [short_code],
+    [shortCode],
   );
 };
 
 export const deleteUrlEntry = async (
   id: string,
-  user_id: string,
+  userId: string,
 ): Promise<boolean> => {
   const { rowCount } = await pool.query(
     `
     DELETE FROM url_entries
     WHERE id = $1 AND user_id = $2
     `,
-    [id, user_id],
+    [id, userId],
   );
   return (rowCount ?? 0) > 0;
 };

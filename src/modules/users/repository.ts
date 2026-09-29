@@ -16,7 +16,7 @@ const COLS =
 export const createUser = async (
   id: string,
   email: string,
-  password_hash: string,
+  passwordHash: string,
 ): Promise<User> => {
   const { rows } = await pool.query<User>(
     `
@@ -24,7 +24,7 @@ export const createUser = async (
     VALUES ($1, $2, $3) 
     RETURNING ${COLS}
     `,
-    [id, email, password_hash],
+    [id, email, passwordHash],
   );
   return rows[0];
 };
