@@ -1,9 +1,7 @@
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { httpError } from "../../utils/http-error.ts";
+import { generateShortCode } from "../../utils/short-code.ts";
 import * as repository from "./repository.ts";
-
-const generateShortCode = (): string =>
-  randomBytes(4).toString("base64url").slice(0, 6);
 
 export const createUrl = async (
   userId: string,
@@ -11,25 +9,29 @@ export const createUrl = async (
   customCode?: string,
   expiresAt?: string,
 ): Promise<repository.URLEntry> => {
-  const short_code = customCode ?? generateShortCode();
   const expires_at = expiresAt ? new Date(expiresAt) : null;
 
-  const existing = await repository.getUrlEntryByShortCode(short_code);
-  if (existing) {
-    throw httpError(
-      customCode
-        ? "short code already taken"
-        : "short code collision, please try again",
-      409,
+  const maxAttempts = customCode ? 1 : 5;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const short_code = customCode ?? generateShortCode();
+    const existing = await repository.getUrlEntryByShortCode(short_code);
+    if (existing) {
+      if (customCode) throw httpError("short code already taken", 409);
+      continue;
+    }
+
+    return repository.createUrlEntry(
+      randomUUID(),
+      userId,
+      short_code,
+      originalUrl,
+      expires_at,
     );
   }
 
-  return repository.createUrlEntry(
-    randomUUID(),
-    userId,
-    short_code,
-    originalUrl,
-    expires_at,
+  throw httpError(
+    "unable to generate a unique short code, please try again",
+    503,
   );
 };
 
@@ -49,7 +51,9 @@ export const redirect = async (shortCode: string): Promise<string> => {
   return entry.original_url;
 };
 
-export const listUrls = async (userId: string): Promise<repository.URLEntry[]> => {
+export const listUrls = async (
+  userId: string,
+): Promise<repository.URLEntry[]> => {
   return repository.listUrlEntries(userId);
 };
 

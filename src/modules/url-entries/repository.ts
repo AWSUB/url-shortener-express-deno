@@ -71,7 +71,9 @@ export const listUrlEntries = async (user_id: string): Promise<URLEntry[]> => {
   return rows;
 };
 
-export const incrementClickCount = async (short_code: string): Promise<void> => {
+export const incrementClickCount = async (
+  short_code: string,
+): Promise<void> => {
   await pool.query(
     `
     UPDATE url_entries

@@ -45,8 +45,7 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
   const { rows } = await pool.query<User>(
     `
     SELECT ${COLS} FROM users WHERE
-        email = $1 AND
-        deleted_at IS NULL
+        email = $1
     `,
     [email],
   );

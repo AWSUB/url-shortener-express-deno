@@ -16,8 +16,7 @@ Deno.test("verify reports both fields when the body is empty", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(issuePaths(body.data).sort(), ["email", "otp"]);
-  }),
-);
+  }));
 
 Deno.test("verify rejects an otp that is not six digits", () =>
   withApp(async (base) => {
@@ -25,8 +24,7 @@ Deno.test("verify rejects an otp that is not six digits", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(issuePaths(body.data), ["otp"]);
-  }),
-);
+  }));
 
 Deno.test("verify rejects a malformed email alongside a valid otp", () =>
   withApp(async (base) => {
@@ -34,8 +32,7 @@ Deno.test("verify rejects a malformed email alongside a valid otp", () =>
     const body = await res.json();
     assertEquals(res.status, 400);
     assertEquals(issuePaths(body.data), ["email"]);
-  }),
-);
+  }));
 
 Deno.test("verify successfully marks user verified and consumes otp", () =>
   withApp(async (base) => {
@@ -61,8 +58,7 @@ Deno.test("verify successfully marks user verified and consumes otp", () =>
 
     // Clean up
     await pool.query("DELETE FROM users WHERE id = $1", [user.id]);
-  }),
-);
+  }));
 
 Deno.test("verify rejects already-verified user", () =>
   withApp(async (base) => {
@@ -83,6 +79,4 @@ Deno.test("verify rejects already-verified user", () =>
     // Clean up
     await pool.query("DELETE FROM users WHERE id = $1", [user.id]);
     await client.del(`email-otp:${email}`);
-  }),
-);
-
+  }));

@@ -4,7 +4,7 @@ import helmet from "helmet";
 import { errorHandler } from "./middleware/error-handler.ts";
 import { notFound } from "./middleware/not-found.ts";
 import miscRouter from "./modules/misc/routes.ts";
-import urlsRouter from "./modules/urls/routes.ts";
+import urlsRouter from "./modules/url-entries/routes.ts";
 import usersRouter from "./modules/users/routes.ts";
 
 export const app = express();

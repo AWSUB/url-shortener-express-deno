@@ -3,12 +3,12 @@ import { APP_CONFIG } from "../config/env.ts";
 import { client } from "../infra/redis/index.ts";
 import { httpError } from "./http-error.ts";
 
+const otpKey = (email: string) => `email-otp:${email}`;
+
 interface OtpEntry {
   code: string;
   attempts: number;
 }
-
-const otpKey = (email: string) => `email-otp:${email}`;
 
 export const issueOtp = async (email: string): Promise<string> => {
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
@@ -42,3 +42,6 @@ export const consumeOtp = async (
 
   await client.del(otpKey(email));
 };
+
+export const discardOtp = (email: string): Promise<number> =>
+  client.del(otpKey(email));

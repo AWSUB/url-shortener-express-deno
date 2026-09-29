@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-// required and non-empty: your .env has `JWT_ACCESS_SECRET=`, an empty
-// secret would otherwise sign tokens happily.
 const req = z.string().min(1);
 
 const schema = z.object({
