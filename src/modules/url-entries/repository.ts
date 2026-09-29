@@ -87,13 +87,14 @@ export const incrementClickCount = async (
 export const deleteUrlEntry = async (
   id: string,
   userId: string,
-): Promise<boolean> => {
-  const { rowCount } = await pool.query(
+): Promise<string | null> => {
+  const { rows } = await pool.query<{ short_code: string }>(
     `
     DELETE FROM url_entries
     WHERE id = $1 AND user_id = $2
+    RETURNING short_code
     `,
     [id, userId],
   );
-  return (rowCount ?? 0) > 0;
+  return rows[0]?.short_code ?? null;
 };

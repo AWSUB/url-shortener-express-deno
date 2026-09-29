@@ -28,6 +28,7 @@ const schema = z.object({
 
   OTP_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   OTP_TTL_SECONDS: z.coerce.number().int().positive().default(600),
+  SHORT_URL_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
 
   JWT_ACCESS_SECRET: req,
   JWT_EXPIRATION: req,

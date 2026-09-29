@@ -22,3 +22,5 @@ You need Deno, Docker Compose, and the `dbmate` CLI installed.
    ```
 
 The API runs at `http://localhost:3000/api`. OpenAPI documentation is in [`docs/openapi.yaml`](docs/openapi.yaml).
+
+Set `SHORT_URL_CACHE_TTL_SECONDS` in `.env` to change the Redis cache lifetime (default: 3600 seconds).

@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { httpError } from "../../utils/http-error.ts";
 import { generateShortCode } from "../../utils/short-code.ts";
+import {
+  cacheOriginalUrl,
+  getCachedOriginalUrl,
+  invalidateShortUrlCache,
+} from "../../utils/short-url-cache.ts";
 import * as repository from "./repository.ts";
 
 export const createUrl = async (
@@ -20,13 +25,20 @@ export const createUrl = async (
       continue;
     }
 
-    return repository.createUrlEntry(
+    const entry = await repository.createUrlEntry(
       randomUUID(),
       userId,
       shortCode,
       originalUrl,
       expiresAtDate,
     );
+
+    await cacheOriginalUrl(
+      entry.short_code,
+      entry.original_url,
+      entry.expires_at,
+    );
+    return entry;
   }
 
   throw httpError(
@@ -36,19 +48,30 @@ export const createUrl = async (
 };
 
 export const redirect = async (shortCode: string): Promise<string> => {
-  const entry = await repository.getUrlEntryByShortCode(shortCode);
+  let originalUrl = await getCachedOriginalUrl(shortCode);
 
-  if (!entry) {
-    throw httpError("short URL not found", 404);
-  }
+  if (originalUrl === null) {
+    const entry = await repository.getUrlEntryByShortCode(shortCode);
 
-  if (entry.expires_at && entry.expires_at < new Date()) {
-    throw httpError("short URL has expired", 410);
+    if (!entry) {
+      throw httpError("short URL not found", 404);
+    }
+
+    if (entry.expires_at && entry.expires_at < new Date()) {
+      throw httpError("short URL has expired", 410);
+    }
+
+    originalUrl = entry.original_url;
+    await cacheOriginalUrl(
+      entry.short_code,
+      entry.original_url,
+      entry.expires_at,
+    );
   }
 
   await repository.incrementClickCount(shortCode);
 
-  return entry.original_url;
+  return originalUrl;
 };
 
 export const listUrls = async (
@@ -69,8 +92,10 @@ export const getUrl = async (
 };
 
 export const deleteUrl = async (id: string, userId: string): Promise<void> => {
-  const deleted = await repository.deleteUrlEntry(id, userId);
-  if (!deleted) {
+  const deletedShortCode = await repository.deleteUrlEntry(id, userId);
+  if (!deletedShortCode) {
     throw httpError("URL not found", 404);
   }
+
+  await invalidateShortUrlCache(deletedShortCode);
 };
